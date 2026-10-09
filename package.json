@@ -1,0 +1,35 @@
+{
+  "name": "breaker-labels",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Design, auto-map and print labels for electrical breaker panels",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "icons": "node scripts/build-icons.mjs",
+    "typecheck": "vue-tsc --noEmit && tsc -p worker --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/roboto-condensed": "^5.3.0",
+    "idb-keyval": "^6.3.0",
+    "jspdf": "^4.2.1",
+    "mammoth": "^1.13.0",
+    "vue": "^3.5.43"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261009.1",
+    "@iconify-json/mdi": "^1.2.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "typescript": "~5.9",
+    "vite": "^8.3.4",
+    "vue-tsc": "^3.3.12",
+    "wrangler": "^4.149.0"
+  }
+}
