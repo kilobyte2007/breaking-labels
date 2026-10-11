@@ -9,7 +9,11 @@ interface Persisted {
   panels: Panel[]
   currentId: string
   settings: Settings
+  /** Bumped when a stored default has to be migrated. */
+  rev?: number
 }
+
+const REV = 1
 
 function load(): Persisted {
   try {
@@ -24,21 +28,25 @@ function load(): Persisted {
         ai: { ...DEFAULT_SETTINGS.ai, ...data.settings?.ai },
       }
       for (const p of data.panels) p.style = { ...DEFAULT_STYLE, ...p.style }
+      // rev 1: corner radius default went 0.6 → 0 (labels are cut square by hand).
+      if ((data.rev ?? 0) < 1) for (const p of data.panels) if (p.style.radius === 0.6) p.style.radius = 0
+      data.rev = REV
       if (data.panels.length) return data
     }
   } catch { /* corrupted or blocked storage – start fresh */ }
   const p = samplePanel()
-  return { panels: [p], currentId: p.id, settings: structuredClone(DEFAULT_SETTINGS) }
+  return { panels: [p], currentId: p.id, settings: structuredClone(DEFAULT_SETTINGS), rev: REV }
 }
 
 export const state = reactive<Persisted>(load())
 
+const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) } catch { /* quota / private mode */ } }
+save() // persists any migration done in load()
+
 let saveTimer: number | undefined
 watch(state, () => {
   clearTimeout(saveTimer)
-  saveTimer = window.setTimeout(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) } catch { /* quota / private mode */ }
-  }, 250)
+  saveTimer = window.setTimeout(save, 250)
 }, { deep: true })
 
 export const panel = computed<Panel>(() => state.panels.find(p => p.id === state.currentId) ?? state.panels[0])

@@ -34,7 +34,7 @@ export const DEFAULT_STYLE: PanelStyle = {
   border: false,
   borderColor: '#111111',
   borderWidth: 0.2,
-  radius: 0.6,
+  radius: 0, // hand-cut labels have square corners; rounding only makes sense with a corner punch
   padding: 0.8,
   maxFont: 4.2,
   minFont: 1.6,

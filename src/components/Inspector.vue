@@ -247,9 +247,11 @@ const weights = computed(() => fontById(style.value.fontId).weights)
           <div class="field"><label>Colour</label><input v-model="style.borderColor" type="color" /></div>
           <div class="field"><label>Width · {{ style.borderWidth.toFixed(2) }} mm</label><input v-model.number="style.borderWidth" type="range" min="0.1" max="1" step="0.05" /></div>
         </div>
-        <div class="grid-2">
-          <div class="field"><label>Corners · {{ style.radius.toFixed(1) }}</label><input v-model.number="style.radius" type="range" min="0" max="3" step="0.1" /></div>
-          <div class="field"><label>Padding · {{ style.padding.toFixed(1) }}</label><input v-model.number="style.padding" type="range" min="0.2" max="2.5" step="0.1" /></div>
+        <div class="field"><label>Padding · {{ style.padding.toFixed(1) }} mm</label><input v-model.number="style.padding" type="range" min="0.2" max="2.5" step="0.1" /></div>
+        <div class="field">
+          <label>Rounded corners · {{ style.radius ? `${style.radius.toFixed(1)} mm` : 'off' }}</label>
+          <input v-model.number="style.radius" type="range" min="0" max="3" step="0.1" />
+          <span class="hint">Only if you'll cut with a corner punch – hand-cut labels have square corners.</span>
         </div>
         <div class="field"><label>Icon size · {{ Math.round(style.iconScale * 100) }}%</label><input v-model.number="style.iconScale" type="range" min="0.5" max="1.2" step="0.05" /></div>
       </div>
