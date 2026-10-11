@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Ico from './components/Ico.vue'
 import PanelCanvas from './components/PanelCanvas.vue'
 import Inspector from './components/Inspector.vue'
@@ -21,6 +21,19 @@ const showImport = ref(false)
 const showSettings = ref(false)
 const menuOpen = ref(false)
 const panelMenuOpen = ref(false)
+
+// Phones: the inspector is a bottom sheet that opens when a label is selected.
+const sheetOpen = ref(false)
+watch(() => selection.value.length, (n, old) => { if (n && !old) sheetOpen.value = true; else if (!n) sheetOpen.value = false })
+// The sheet shrinks the canvas, so keep the tapped label visible above it.
+watch(sheetOpen, open => { if (open) nextTick(() => setTimeout(() => document.querySelector('.slot.selected')?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }), 50)) })
+const sheetTitle = computed(() => {
+  const ids = selection.value
+  if (!ids.length) return 'Label style'
+  if (ids.length > 1) return `${ids.length} labels selected`
+  const it = panel.value.rows.flatMap(r => r.items).find(i => i.id === ids[0])
+  return it ? [it.number, it.text.replace(/\n/g, ' ')].filter(Boolean).join(' · ') || 'Label' : 'Label'
+})
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'panel'
 
@@ -118,8 +131,8 @@ onBeforeUnmount(() => {
         <button class="btn ghost icon" :disabled="!canUndo" title="Undo (⌘Z)" @click="undo"><Ico name="undo" /></button>
         <button class="btn ghost icon" :disabled="!canRedo" title="Redo (⇧⌘Z)" @click="redo"><Ico name="redo" /></button>
         <span class="divider" />
-        <button class="btn" @click="showImport = true"><Ico name="creation" /> Import map</button>
-        <button class="btn primary" @click="view = 'print'"><Ico name="printer-outline" /> Print</button>
+        <button class="btn" title="Import map" @click="showImport = true"><Ico name="creation" /><span class="btn-label">Import map</span></button>
+        <button class="btn primary" title="Print" @click="view = 'print'"><Ico name="printer-outline" /><span class="btn-label">Print</span></button>
         <div class="menu-wrap">
           <button class="btn ghost icon" title="More" @click="menuOpen = !menuOpen"><Ico name="dots-horizontal" /></button>
           <div v-if="menuOpen" class="menu right">
@@ -136,7 +149,14 @@ onBeforeUnmount(() => {
 
     <main v-show="view === 'editor'" class="editor no-print">
       <PanelCanvas class="canvas" @import="showImport = true" />
-      <Inspector class="inspector" @open-settings="showSettings = true" />
+      <div class="sheet" :class="{ open: sheetOpen }">
+        <button class="sheet-handle" @click="sheetOpen = !sheetOpen">
+          <span class="grip" />
+          <span class="grow sheet-title">{{ sheetTitle }}</span>
+          <Ico :name="sheetOpen ? 'chevron-down' : 'chevron-up'" />
+        </button>
+        <Inspector class="inspector" @open-settings="showSettings = true" />
+      </div>
     </main>
 
     <PrintView v-if="view === 'print'" @close="view = 'editor'" />
@@ -187,10 +207,36 @@ onBeforeUnmount(() => {
 .menu-item.danger svg { color: var(--danger); }
 .menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
+.sheet { display: contents; }
+.sheet-handle { display: none; }
+
 @media (max-width: 900px) {
+  .shell { height: 100dvh; }
   .editor { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-  .inspector { border-left: 0; border-top: 1px solid var(--border); max-height: 45vh; }
+  .sheet {
+    display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 24px rgb(0 0 0 / 8%); border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sheet-handle {
+    display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px; border: 0; background: transparent; cursor: pointer;
+    font-weight: 650; text-align: left; position: relative; flex: none;
+  }
+  .sheet-handle .grip { position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 4px; background: var(--border-strong); }
+  .sheet-handle svg { width: 20px; height: 20px; color: var(--text-3); }
+  .sheet-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inspector { border-left: 0; border-top: 1px solid var(--border); max-height: 0; overflow: hidden; }
+  .sheet.open .inspector { max-height: 58dvh; overflow: auto; }
+  .sheet:not(.open) .inspector { border-top: 0; }
   .brand span { display: none; }
   .tools .btn:not(.icon) { padding: 0 9px; }
+}
+@media (max-width: 640px) {
+  .top { gap: 6px; padding: 0 8px 0 10px; }
+  .panel-switch { padding-left: 6px; flex: 1; min-width: 0; }
+  .panel-name { width: 100%; min-width: 0; padding: 0 6px; }
+  .top > .grow, .tools .divider { display: none; }
+  .tools { gap: 2px; }
+  .tools .btn:not(.icon) { width: 36px; padding: 0; }
+  .btn-label { display: none; }
 }
 </style>

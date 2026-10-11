@@ -165,6 +165,22 @@ input[type='color'] { width: 34px; height: 34px; border: 1px solid var(--border)
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
 
+/* ---------- phones ---------- */
+
+@media (max-width: 640px) {
+  .backdrop { padding: 0; place-items: stretch; }
+  .modal, .modal.wide { width: 100%; max-height: none; height: 100dvh; border-radius: 0; }
+  .modal-head { padding: 12px 14px; }
+  .modal-body { padding: 14px; flex: 1; }
+  .modal-foot { padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+}
+/* iOS zooms into any focused field under 16px. */
+@media (pointer: coarse) {
+  .input, .select, .textarea, .input.sm, .select.sm { font-size: 16px; }
+  .btn.sm { height: 34px; }
+  .btn.sm.icon { width: 34px; }
+}
+
 /* ---------- print ---------- */
 
 @media print {

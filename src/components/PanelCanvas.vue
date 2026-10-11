@@ -12,7 +12,7 @@ defineEmits<{ import: [] }>()
 const read = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch { return d } }
 const write = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
 
-const zoom = ref<number>(read('bl:zoom', 6))
+const zoom = ref<number>(read('bl:zoom', window.innerWidth < 640 ? 4 : 6))
 const deviceView = ref<boolean>(read('bl:device', true))
 const showPhoto = ref<boolean>(read('bl:photo', true))
 watch(zoom, v => write('bl:zoom', v))
@@ -100,7 +100,7 @@ const px = (mm: number) => `${mm * zoom.value}px`
         <button class="btn sm" title="Number all labels 1, 2, 3… left→right, top→bottom" @click="renumber()"><Ico name="format-list-numbered" /> Renumber</button>
       </div>
       <div class="grow" />
-      <span class="hint">{{ total }} label{{ total === 1 ? '' : 's' }} · {{ panel.rows.length }} row{{ panel.rows.length === 1 ? '' : 's' }}</span>
+      <span class="hint count">{{ total }} label{{ total === 1 ? '' : 's' }} · {{ panel.rows.length }} row{{ panel.rows.length === 1 ? '' : 's' }}</span>
       <label class="switch compact"><span>Device view</span><input v-model="deviceView" type="checkbox" /></label>
       <label v-if="photoUrl" class="switch compact"><span>Photo</span><input v-model="showPhoto" type="checkbox" /></label>
       <div class="zoom">
@@ -134,7 +134,7 @@ const px = (mm: number) => `${mm * zoom.value}px`
       <div v-for="(row, ri) in panel.rows" :key="row.id" class="rowcard">
         <div class="row-head">
           <input v-model="row.name" class="row-name" spellcheck="false" aria-label="Row name" />
-          <span class="hint mono">{{ row.items.length }} · {{ rowWidth(row) }} mm</span>
+          <span class="hint mono nowrap">{{ row.items.length }} · {{ rowWidth(row) }} mm</span>
           <div class="grow" />
           <button class="btn ghost sm icon" title="Move row up" :disabled="ri === 0" @click="moveRow(row, -1)"><Ico name="chevron-up" /></button>
           <button class="btn ghost sm icon" title="Move row down" :disabled="ri === panel.rows.length - 1" @click="moveRow(row, 1)"><Ico name="chevron-down" /></button>
@@ -265,5 +265,18 @@ const px = (mm: number) => `${mm * zoom.value}px`
 .adder svg { width: 14px; height: 14px; }
 
 .add-row { border-style: dashed; }
+.nowrap { white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .toolbar { gap: 8px 10px; padding: 8px 10px; }
+  .toolbar .count, .keys { display: none; }
+  .zoom { width: auto; flex: 1; min-width: 140px; }
+  .scroll { padding: 12px 10px; gap: 12px; }
+  .rowcard { min-width: 100%; }
+  .row-head { padding: 6px 6px 6px 8px; gap: 2px; }
+  .row-name { width: 0; flex: 1; min-width: 70px; }
+  .row-head > .grow { display: none; }
+  .rail { padding: 14px 10px; }
+}
 .keys { margin: 4px 0 0; line-height: 2; }
 </style>

@@ -188,7 +188,7 @@ function setPaper(p: string) {
         <button v-if="print.scaleX !== 1 || print.scaleY !== 1" class="btn sm" @click="print.scaleX = 1; print.scaleY = 1"><Ico name="refresh" /> Reset calibration</button>
       </div>
 
-      <div class="section">
+      <div class="section preview-size">
         <div class="field">
           <label>Preview size</label>
           <input v-model.number="previewWidth" type="range" min="320" max="1100" step="10" />
@@ -203,7 +203,7 @@ function setPaper(p: string) {
         <svg
           :ref="el => { if (el) sheetEls[pi] = el as SVGSVGElement }"
           class="sheet" xmlns="http://www.w3.org/2000/svg"
-          :viewBox="`0 0 ${paper[0]} ${paper[1]}`" :style="{ width: `${previewWidth}px`, height: `${previewWidth * paper[1] / paper[0]}px` }"
+          :viewBox="`0 0 ${paper[0]} ${paper[1]}`" :style="{ width: `${previewWidth}px`, aspectRatio: `${paper[0]} / ${paper[1]}` }"
         >
           <rect :width="paper[0]" :height="paper[1]" fill="#fff" />
           <g :transform="`scale(${print.scaleX} ${print.scaleY})`">
@@ -244,7 +244,7 @@ function setPaper(p: string) {
         <svg
           :ref="el => { if (el) sheetEls[pages.length] = el as SVGSVGElement }"
           class="sheet" xmlns="http://www.w3.org/2000/svg"
-          :viewBox="`0 0 ${paper[0]} ${paper[1]}`" :style="{ width: `${previewWidth}px`, height: `${previewWidth * paper[1] / paper[0]}px` }"
+          :viewBox="`0 0 ${paper[0]} ${paper[1]}`" :style="{ width: `${previewWidth}px`, aspectRatio: `${paper[0]} / ${paper[1]}` }"
         >
           <rect :width="paper[0]" :height="paper[1]" fill="#fff" />
           <g :transform="`scale(${print.scaleX} ${print.scaleY})`" font-family="Inter, sans-serif">
@@ -275,9 +275,9 @@ function setPaper(p: string) {
 .side { background: var(--surface); border-right: 1px solid var(--border); overflow: auto; }
 .side-head { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 h3 { font-size: 16px; }
-.pages { overflow: auto; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 22px; background: var(--surface-3); }
+.pages { overflow: auto; padding: 28px; display: flex; flex-direction: column; align-items: safe center; gap: 22px; background: var(--surface-3); }
 .page { display: grid; gap: 6px; justify-items: center; }
-.sheet { display: block; background: #fff; box-shadow: var(--shadow-lg); border-radius: 2px; }
+.sheet { display: block; background: #fff; box-shadow: var(--shadow-lg); border-radius: 2px; max-width: 100%; height: auto; }
 .page-num { font-size: 12px; color: var(--text-3); }
 .empty { padding: 30px; }
 .mono { font-family: var(--mono); }
@@ -287,10 +287,12 @@ h3 { font-size: 16px; }
   .pages { padding: 0; gap: 0; background: #fff; overflow: visible; display: block; }
   .page { display: block; break-after: page; page-break-after: always; }
   .page:last-child { break-after: auto; page-break-after: auto; }
-  .sheet { box-shadow: none; border-radius: 0; }
+  .sheet { box-shadow: none; border-radius: 0; max-width: none; }
 }
 @media (max-width: 900px) {
   .printview { grid-template-columns: 1fr; }
-  .side { border-right: 0; border-bottom: 1px solid var(--border); }
+  .side { border-right: 0; border-bottom: 1px solid var(--border); overflow: visible; }
+  .pages { padding: 16px; overflow: visible; }
+  .preview-size { display: none; }
 }
 </style>

@@ -226,16 +226,16 @@ async function apply() {
             <thead><tr><th>Preview</th><th>No.</th><th>Label</th><th>2nd line</th><th>Icon</th><th>Size</th><th>Type</th><th /></tr></thead>
             <tbody>
               <tr v-for="(it, i) in row.items" :key="i" :title="it.notes">
-                <td class="pv">
+                <td class="pv c-pv">
                   <svg
                     :width="sizeById(preview(it).sizeId).width * 3.4" :height="sizeById(preview(it).sizeId).height * 3.4"
                     :viewBox="`0 0 ${sizeById(preview(it).sizeId).width} ${sizeById(preview(it).sizeId).height}`"
                   ><LabelSvg :item="preview(it)" :size="sizeById(preview(it).sizeId)" :panel-style="panel.style" /></svg>
                 </td>
-                <td><input v-model="it.number" class="input sm mono" style="width: 56px" /></td>
-                <td><input v-model="it.text" class="input sm" /></td>
-                <td><input v-model="it.sub" class="input sm" style="width: 90px" /></td>
-                <td>
+                <td class="c-no"><input v-model="it.number" class="input sm mono" placeholder="No." aria-label="Number" /></td>
+                <td class="c-text"><input v-model="it.text" class="input sm" placeholder="Label" aria-label="Label" /></td>
+                <td class="c-sub"><input v-model="it.sub" class="input sm" placeholder="2nd line" aria-label="Second line" /></td>
+                <td class="c-icon">
                   <div class="row icon-cell">
                     <svg v-if="it.icon" viewBox="0 0 24 24"><g fill="currentColor" v-html="iconBody(`mdi:${it.icon}`)" /></svg>
                     <select v-model="it.icon" class="select sm">
@@ -244,14 +244,14 @@ async function apply() {
                     </select>
                   </div>
                 </td>
-                <td>
-                  <select v-model="it.sizeId" class="select sm">
+                <td class="c-size">
+                  <select v-model="it.sizeId" class="select sm" aria-label="Size">
                     <option value="">smallest</option>
                     <option v-for="s in sizes" :key="s.id" :value="s.id">{{ s.width }}×{{ s.height }}</option>
                   </select>
                 </td>
-                <td><select v-model="it.kind" class="select sm"><option v-for="k in KINDS" :key="k" :value="k">{{ k }}</option></select></td>
-                <td><button class="btn ghost sm icon" @click="removeItem(row, i)"><Ico name="close" /></button></td>
+                <td class="c-kind"><select v-model="it.kind" class="select sm" aria-label="Type"><option v-for="k in KINDS" :key="k" :value="k">{{ k }}</option></select></td>
+                <td class="c-rm"><button class="btn ghost sm icon" title="Remove" @click="removeItem(row, i)"><Ico name="close" /></button></td>
               </tr>
             </tbody>
           </table>
@@ -324,5 +324,25 @@ td.pv svg { display: block; box-shadow: 0 0 0 1px var(--border); border-radius: 
 .mode input { position: absolute; opacity: 0; }
 .mode.on { border-color: var(--text); background: var(--accent-soft); }
 .mode[aria-disabled='true'] { opacity: .45; cursor: default; }
+.c-no .input { width: 56px; }
+.c-sub .input { width: 90px; }
 @media (max-width: 800px) { .cols, .modes { grid-template-columns: 1fr; } }
+/* Phones: each detected label becomes a small card instead of an 8-column table row. */
+@media (max-width: 640px) {
+  .draft-row { padding: 8px; }
+  .table-wrap { overflow: visible; }
+  table, tbody { display: block; }
+  thead { display: none; }
+  tr {
+    display: grid; gap: 6px; padding: 8px 0; border-top: 1px solid var(--border);
+    grid-template-columns: 64px 1fr 1fr 40px;
+    grid-template-areas: 'pv pv pv rm' 'no text text text' 'sub sub size size' 'icon icon kind kind';
+  }
+  td { padding: 0; min-width: 0; }
+  .c-pv { grid-area: pv; } .c-no { grid-area: no; } .c-text { grid-area: text; } .c-sub { grid-area: sub; }
+  .c-icon { grid-area: icon; } .c-size { grid-area: size; } .c-kind { grid-area: kind; } .c-rm { grid-area: rm; justify-self: end; }
+  td .input, td .select, .c-no .input, .c-sub .input, .icon-cell .select { width: 100%; }
+  .icon-cell .select { flex: 1; min-width: 0; }
+  .drop.tall { min-height: 150px; }
+}
 </style>
