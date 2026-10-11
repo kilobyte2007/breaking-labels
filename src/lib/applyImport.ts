@@ -31,7 +31,7 @@ export function toLabel(a: AnalyzedItem): LabelItem {
 
 /**
  * - replace: the draft becomes the panel layout.
- * - merge:   keep the existing layout; fill labels whose number matches, append the rest to the last row.
+ * - merge:   keep the existing layout; fill labels whose number matches, put the rest in rows of the same name (or new rows).
  * - append:  add the draft rows below the existing ones.
  */
 export function applyDraft(panel: Panel, rows: DraftRow[], mode: ImportMode): { matched: number; added: number } {
@@ -48,20 +48,24 @@ export function applyDraft(panel: Panel, rows: DraftRow[], mode: ImportMode): { 
   for (const item of panel.rows.flatMap(r => r.items)) if (item.number) existing.set(normNum(item.number), item)
   let matched = 0
   let added = 0
-  const leftovers: LabelItem[] = []
-  for (const item of built.flatMap(r => r.items)) {
-    const target = item.number ? existing.get(normNum(item.number)) : undefined
-    if (target) {
-      Object.assign(target, { text: item.text, sub: item.sub || target.sub, icon: item.icon || target.icon, notes: item.notes || target.notes, color: target.color || item.color, blank: item.blank })
-      matched++
-    } else {
-      leftovers.push(item)
+  for (const draftRow of built) {
+    const leftovers: LabelItem[] = []
+    for (const item of draftRow.items) {
+      const target = item.number ? existing.get(normNum(item.number)) : undefined
+      if (target) {
+        Object.assign(target, { text: item.text, sub: item.sub || target.sub, icon: item.icon || target.icon, notes: item.notes || target.notes, color: target.color || item.color, blank: item.blank })
+        matched++
+      } else {
+        leftovers.push(item)
+      }
     }
-  }
-  if (leftovers.length) {
-    const last = panel.rows[panel.rows.length - 1] ?? (panel.rows.push(newRow('Row 1')), panel.rows[0])
-    last.items.push(...leftovers)
-    added = leftovers.length
+    if (!leftovers.length) continue
+    // Keep the detected row structure: unmatched labels go to the row of the same name, or a new row.
+    const name = draftRow.name.trim().toLowerCase()
+    const target = panel.rows.find(r => r.name.trim().toLowerCase() === name)
+    if (target) target.items.push(...leftovers)
+    else panel.rows.push({ ...draftRow, items: leftovers })
+    added += leftovers.length
   }
   return { matched, added }
 }

@@ -28,6 +28,10 @@ const warnings = ref<string[]>([])
 const unparsed = ref<string[]>([])
 const hasExisting = panel.value.rows.some(r => r.items.length)
 const mode = ref<ImportMode>(hasExisting ? 'merge' : 'replace')
+/** A draft with its own row structure (several rows, or read from a photo) should replace the layout by default. */
+function pickMode() {
+  mode.value = !hasExisting || draft.value.length > 1 || photo.value ? 'replace' : 'merge'
+}
 const overPhoto = ref(false)
 const overDoc = ref(false)
 
@@ -69,6 +73,7 @@ function parseLocally() {
   const res = parseCircuitList(allText())
   if (!res.items.length) { error.value = 'No “number – name” lines found. Try the AI import instead.'; return }
   draft.value = [{ name: 'Row 1', items: res.items }]
+  pickMode()
   unparsed.value = res.unparsed
   summary.value = `Found ${res.items.length} circuits in the list.`
   warnings.value = []
@@ -89,6 +94,7 @@ async function analyze() {
       instructions: instructions.value,
     })
     draft.value = result.rows
+    pickMode()
     summary.value = result.summary
     warnings.value = result.warnings
     unparsed.value = []
@@ -215,6 +221,7 @@ async function apply() {
             <button class="btn ghost sm" @click="addDraftItem(row)"><Ico name="plus" /> Item</button>
             <button class="btn ghost sm icon danger" title="Remove row" @click="draft.splice(ri, 1)"><Ico name="delete-outline" /></button>
           </div>
+          <div class="table-wrap">
           <table>
             <thead><tr><th>Preview</th><th>No.</th><th>Label</th><th>2nd line</th><th>Icon</th><th>Size</th><th>Type</th><th /></tr></thead>
             <tbody>
@@ -248,13 +255,14 @@ async function apply() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <div class="field">
           <label>How to apply</label>
           <div class="modes">
             <label class="mode" :class="{ on: mode === 'replace' }"><input v-model="mode" type="radio" value="replace" /><b>Replace layout</b><span class="hint">Rows and labels become exactly this.</span></label>
-            <label class="mode" :class="{ on: mode === 'merge' }" :aria-disabled="!hasExisting"><input v-model="mode" type="radio" value="merge" :disabled="!hasExisting" /><b>Fill by number</b><span class="hint">Keep my layout, update labels with matching numbers.</span></label>
+            <label class="mode" :class="{ on: mode === 'merge' }" :aria-disabled="!hasExisting"><input v-model="mode" type="radio" value="merge" :disabled="!hasExisting" /><b>Fill by number</b><span class="hint">Keep my layout, update labels with matching numbers. New ones go into rows of the same name.</span></label>
             <label class="mode" :class="{ on: mode === 'append' }"><input v-model="mode" type="radio" value="append" /><b>Add rows</b><span class="hint">Append below the existing rows.</span></label>
           </div>
         </div>
@@ -301,7 +309,8 @@ async function apply() {
 .warnings li { display: flex; gap: 6px; align-items: flex-start; color: var(--warn); font-size: 13px; }
 .warnings svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
 pre { white-space: pre-wrap; font-size: 12px; }
-.draft-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; overflow-x: auto; }
+.draft-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; padding: 4px 4px; }
 td { padding: 3px 4px; vertical-align: middle; }
