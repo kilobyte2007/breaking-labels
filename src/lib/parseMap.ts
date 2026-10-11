@@ -29,21 +29,59 @@ export function parseCircuitList(text: string): ParsedMap {
     const rating = desc.match(RATING_RE)?.[0] ?? ''
     if (rating) desc = desc.replace(rating, '').replace(/[\s,;()–-]+$/, '').replace(/\(\s*\)/, '').trim()
     const kind = KIND_HINTS.find(([re]) => re.test(desc))?.[1] ?? 'breaker'
+    const text = shorten(desc)
     items.push({
       number,
-      text: shorten(desc),
+      text,
       sub: rating.replace(/\s+/g, '').replace(/(\d)A(\d)/i, '$1A/$2'),
       icon: suggestIcon(desc).replace(/^mdi:/, ''),
       sizeId: '',
       kind: kind === 'blank' ? 'breaker' : kind,
-      notes: desc.length > 18 ? m[2].trim() : '',
+      notes: text !== desc ? m[2].trim() : '',
     })
   }
   return { items, unparsed }
 }
 
-/** Label-friendly text: first letter upper-case, trailing punctuation removed. */
-function shorten(s: string) {
-  const t = s.replace(/\s+/g, ' ').replace(/[.;:,]+$/, '').trim()
+// Common long phrases → label-sized forms. Only applied when a name is too long for a small label.
+// `\b` is ASCII-only in JS, so word boundaries are spelled out with Unicode letter classes.
+const w = (src: string) => new RegExp(`(?<![\\p{L}\\d])(?:${src})(?![\\p{L}])`, 'giu')
+const ABBREV: [RegExp, string][] = [
+  [w('aer\\s+condi[tțţ]ionat'), 'AC'],
+  [w('air\\s+condition(?:er|ing)'), 'AC'],
+  [w('кондиционер'), 'Кондиц.'],
+  [w('ma[sșş]in[aă]\\s+de\\s+sp[aă]lat\\s+vase'), 'MSV'],
+  [w('ma[sșş]in[aă]\\s+de\\s+sp[aă]lat(?:\\s+rufe)?'), 'MSR'],
+  [w('washing\\s+machine'), 'Washer'],
+  [w('стиральная\\s+машина'), 'Стиралка'],
+  [w('посудомоечная\\s+машина'), 'ПММ'],
+  [w('central[aă]\\s+termic[aă]'), 'CT'],
+  [w('iluminat(?:ul)?'), 'Ilum.'],
+  [w('lighting'), 'Lights'],
+  [w('освещение'), 'Свет'],
+  [w('dormitor(?:ul)?'), 'dorm.'],
+  [w('bedroom'), 'bedrm'],
+  [w('спальня'), 'спальн.'],
+  [w('buc[aă]t[aă]ri[ea]'), 'bucăt.'],
+  [w('kitchen'), 'kitch.'],
+  [w('кухня'), 'кухня'],
+  [w('sufragerie'), 'sufrag.'],
+  [w('living\\s*room'), 'living'],
+  [w('bathroom'), 'bath'],
+  [w('hallway'), 'hall'],
+  [w('cuptor\\s+electric'), 'Cuptor'],
+  [w('plit[aă]\\s+(?:electric[aă]|(?:cu\\s+)?induc[tțţ]ie)'), 'Plită'],
+  [w('exterior'), 'ext.'],
+  [w('outdoor'), 'outdr'],
+  [w('(?:etaj(?:ul)?|floor)\\s*(\\d)'), 'E$1'],
+]
+const FILLER = w('si|și|şi|and|и|de|din|la|pentru|for|the|в|для')
+
+/** Label-friendly text: first letter upper-case, trailing punctuation removed, long phrases abbreviated. */
+export function shorten(s: string, max = 14) {
+  let t = s.replace(/\s+/g, ' ').replace(/[.;:,]+$/, '').trim()
+  if (t.length > max) for (const [re, to] of ABBREV) t = t.replace(re, to)
+  if (t.length > max) t = t.replace(FILLER, ' ')
+  t = t.replace(/\s+/g, ' ').replace(/\.(?=\s*$)/, '').trim()
   return t.charAt(0).toLocaleUpperCase() + t.slice(1)
 }
