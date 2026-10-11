@@ -85,6 +85,9 @@ function moveRow(row: PanelRow, dir: -1 | 1) {
   ;[rows[i], rows[j]] = [rows[j], rows[i]]
 }
 
+/** Same corner radius as LabelSvg's clip, so the window frame hugs the label. */
+const cornerOf = (item: LabelItem) => Math.min(panel.value.style.radius, sizeById(item.sizeId).height / 2)
+
 const sortedSizes = computed(() => [...sizes.value].sort((a, b) => a.width - b.width))
 const px = (mm: number) => `${mm * zoom.value}px`
 </script>
@@ -139,6 +142,7 @@ const px = (mm: number) => `${mm * zoom.value}px`
           <button class="btn ghost sm icon danger" title="Delete row" @click="removeRow(row)"><Ico name="delete-outline" /></button>
         </div>
 
+        <div class="rail-scroll">
         <div
           class="rail" :class="{ device: deviceView }"
           :style="{ '--rail-h': px(deviceView ? 15 : 0) }"
@@ -159,14 +163,14 @@ const px = (mm: number) => `${mm * zoom.value}px`
                 v-if="deviceView" class="body"
                 :style="{ width: px(sizeById(item.sizeId).width + BODY_PAD_X * 2), height: px(sizeById(item.sizeId).height + BODY_TOP + BODY_BOTTOM), paddingTop: px(BODY_TOP) }"
               >
-                <div class="window">
+                <div class="window" :style="{ borderRadius: px(cornerOf(item)) }">
                   <svg :width="px(sizeById(item.sizeId).width)" :height="px(sizeById(item.sizeId).height)" :viewBox="`0 0 ${sizeById(item.sizeId).width} ${sizeById(item.sizeId).height}`">
                     <LabelSvg :item="item" :size="sizeById(item.sizeId)" :panel-style="panel.style" />
                   </svg>
                 </div>
                 <div class="lever" :style="{ width: px(Math.min(6, sizeById(item.sizeId).width * 0.4)), height: px(8), marginTop: px(3) }" />
               </div>
-              <svg v-else class="bare" :width="px(sizeById(item.sizeId).width)" :height="px(sizeById(item.sizeId).height)" :viewBox="`0 0 ${sizeById(item.sizeId).width} ${sizeById(item.sizeId).height}`">
+              <svg v-else class="bare" :style="{ borderRadius: px(cornerOf(item)) }" :width="px(sizeById(item.sizeId).width)" :height="px(sizeById(item.sizeId).height)" :viewBox="`0 0 ${sizeById(item.sizeId).width} ${sizeById(item.sizeId).height}`">
                 <LabelSvg :item="item" :size="sizeById(item.sizeId)" :panel-style="panel.style" />
               </svg>
               <span v-if="!item.blank && tight(item)" class="tight" title="Text is very small on this label – shorten it or use a bigger size">!</span>
@@ -183,6 +187,7 @@ const px = (mm: number) => `${mm * zoom.value}px`
               <Ico name="plus" /><span v-if="s.width * zoom >= 60">{{ s.width }}</span>
             </button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -222,20 +227,22 @@ const px = (mm: number) => `${mm * zoom.value}px`
 .row-name:hover { border-color: var(--border); }
 .row-name:focus { border-color: var(--focus); }
 
-.rail { position: relative; display: flex; align-items: center; gap: 0; padding: 18px 16px; overflow-x: auto; min-height: 70px; }
+.rail-scroll { overflow-x: auto; border-radius: 0 0 var(--radius) var(--radius); }
+/* Sized to its content (not the card), so the DIN rail and the end padding scroll along with the breakers. */
+.rail { position: relative; display: flex; align-items: center; gap: 0; padding: 18px 16px; min-height: 70px; width: max-content; min-width: 100%; }
 .rail.device::before {
   content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--rail-h); transform: translateY(-50%);
   background: linear-gradient(var(--rail-line), var(--rail-line)) 0 18% / 100% 1px no-repeat, linear-gradient(var(--rail-line), var(--rail-line)) 0 82% / 100% 1px no-repeat, var(--rail);
 }
 .slot { position: relative; flex: none; cursor: grab; border-radius: 3px; transition: transform .1s; z-index: 1; }
-.slot:not(.device) .bare { display: block; box-shadow: 0 0 0 1px var(--border-strong); border-radius: 2px; margin-right: 3px; }
+.bare { display: block; box-shadow: 0 0 0 1px var(--border-strong); margin-right: 3px; }
 .slot.dragging { opacity: .35; }
 .body {
   display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
   background: linear-gradient(#fbfbf9, #ecebe6); border: 1px solid #c9c6bc; border-radius: 3px;
   box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(0 0 0 / 10%);
 }
-.window { line-height: 0; box-shadow: 0 0 0 1px #b5b2a7, 0 1px 3px rgb(0 0 0 / 12%) inset; border-radius: 1px; background: #fff; }
+.window { line-height: 0; box-shadow: 0 0 0 1px #b5b2a7; overflow: hidden; background: #fff; }
 .window svg { display: block; }
 .lever { background: linear-gradient(#55534c, #2c2b27); border-radius: 2px; box-shadow: 0 1px 2px rgb(0 0 0 / 30%); }
 .slot.blank .body { background: repeating-linear-gradient(-45deg, #ecebe6, #ecebe6 5px, #e3e1da 5px, #e3e1da 10px); }
