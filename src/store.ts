@@ -269,7 +269,7 @@ export function exportPanelJson(): string {
 export function importPanelJson(text: string) {
   const data = JSON.parse(text)
   const p: Panel = data.panel ?? data
-  if (!Array.isArray(p.rows)) throw new Error('Not a breaker-labels panel file')
+  if (!Array.isArray(p.rows)) throw new Error('Not a Breaking Labels panel file')
   // Bring along any sizes the file uses that we don't have.
   for (const s of (data.sizes ?? []) as LabelSize[]) {
     if (!state.settings.sizes.some(x => x.id === s.id)) state.settings.sizes.push(s)

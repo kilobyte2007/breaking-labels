@@ -38,7 +38,7 @@ const sheetTitle = computed(() => {
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'panel'
 
 function exportJson() {
-  download(`${slug(panel.value.name)}.breaker-labels.json`, exportPanelJson())
+  download(`${slug(panel.value.name)}.breaking-labels.json`, exportPanelJson())
   menuOpen.value = false
 }
 
@@ -104,7 +104,7 @@ onBeforeUnmount(() => {
     <header class="top no-print">
       <div class="brand">
         <svg viewBox="0 0 32 32" class="logo"><rect width="32" height="32" rx="7" fill="currentColor" /><rect x="5" y="11" width="22" height="10" rx="2" fill="#f2b705" /><path d="M17.5 12.5 13 17h3l-1.5 3 4.5-4.5h-3z" fill="#1c1b18" /></svg>
-        <span>Breaker Labels</span>
+        <span>Breaking Labels</span>
       </div>
 
       <div class="menu-wrap panel-switch">

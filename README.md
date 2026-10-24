@@ -1,4 +1,4 @@
-# Breaker Labels
+# Breaking Labels
 
 Design, auto-map and print labels for the paper windows on DIN-rail breakers.
 
@@ -33,7 +33,7 @@ One Worker serves the built app from `dist/` and handles `/api/*`. No other Clou
 1. Push this repo to GitHub or GitLab.
 2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Import a repository**, pick the repo.
 3. Settings:
-   - **Project / Worker name:** `breaker-labels`. It must match `name` in `wrangler.jsonc`; change both if you want another name.
+   - **Project / Worker name:** `breaking-labels`. It must match `name` in `wrangler.jsonc`; change both if you want another name.
    - **Build command:** `npm run build`
    - **Deploy command:** `npx wrangler deploy` (the default)
    - **Root directory:** leave empty

@@ -38,7 +38,7 @@ function resetSizes() {
 const sample = (sizeId: string) => newItem({ sizeId, number: '12', text: 'Kitchen', icon: 'mdi:power-socket-eu', color: '#f97316' })
 
 function exportAll() {
-  download('breaker-labels-backup.json', JSON.stringify({ app: 'breaker-labels', version: 1, ...state }, null, 2))
+  download('breaking-labels-backup.json', JSON.stringify({ app: 'breaker-labels', version: 1, ...state }, null, 2))
 }
 
 function resetAll() {
